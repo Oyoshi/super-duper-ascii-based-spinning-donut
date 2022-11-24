@@ -1,5 +1,7 @@
 ## Spinning Donut
 
+![Magenta Spinning Donut](demo.gif)
+
 Here is my implementation of the [Spinning Donut](https://www.a1k0n.net/2011/07/20/donut-math.html) written in :snake:. To make it more meaningfull in terms of art (it's an **ASCII ART** :trollface: ) I've added some basic colours support. These colours were taken from **8-bit** escape characters table. By default the donut will be rendered with default terminal settings. To render the donut with different colour than default one just run the script with given option:
 
 ```
