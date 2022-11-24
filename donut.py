@@ -1,8 +1,8 @@
 from math import sin, cos, pi
 
 
-theta_spacing = 0.07
-phi_spacing = 0.02
+delta_theta = 0.07
+delta_phi = 0.02
 
 R1 = 1
 R2 = 2
@@ -13,10 +13,31 @@ screen_height = 48
 
 K1 = screen_width * K2 * 3 / (8 * (R1 + R2))
 
+SYMBOLS = ".,-~:;=!*#$@"
+COLOURS = range(197, 201)
+
+
+def simulate_donut(A, B):
+    print("\x1b[2J")
+    while True:
+        render_frame(A, B)
+        A += 0.08
+        B += 0.03
+
 
 def render_frame(A, B):
+    char_output, colour_output = compute_frame(A, B)
+
+    print("\x1b[H")
+    for i in range(screen_height):
+        for j in range(screen_width):
+            print(f"\033[38;5;{colour_output[i][j]}m{char_output[i][j]}", end="")
+        print()
+
+
+def compute_frame(A, B):
     char_output = [[" " for _ in range(screen_width)] for _ in range(screen_height)]
-    color_output = [[" " for _ in range(screen_width)] for _ in range(screen_height)]
+    colour_output = [[" " for _ in range(screen_width)] for _ in range(screen_height)]
     zbuffer = [[0 for _ in range(screen_width)] for _ in range(screen_height)]
 
     sinA, cosA = sin(A), cos(A)
@@ -24,18 +45,15 @@ def render_frame(A, B):
 
     theta = 0
     while theta < 2 * pi:
-        costheta = cos(theta)
-        sintheta = sin(theta)
-        theta += theta_spacing
+        sintheta, costheta = sin(theta), cos(theta)
+        theta += delta_theta
 
         phi = 0
         while phi < 2 * pi:
-            cosphi = cos(phi)
-            sinphi = sin(phi)
-            phi += phi_spacing
+            sinphi, cosphi = sin(phi), cos(phi)
+            phi += delta_phi
 
-            circle_x = R2 + R1 * costheta
-            circle_y = R1 * sintheta
+            circle_x, circle_y = R2 + R1 * costheta, R1 * sintheta
 
             x = (
                 circle_x * (cosB * cosphi + sinA * sinB * sinphi)
@@ -48,8 +66,9 @@ def render_frame(A, B):
             z = K2 + cosA * circle_x * sinphi + circle_y * sinA
             ooz = 1 / z
 
-            xp = int(screen_width / 2 + K1 * ooz * x)
-            yp = int(screen_height / 2 - K1 * ooz * y)
+            xp, yp = int(screen_width / 2 + K1 * ooz * x), int(
+                screen_height / 2 - K1 * ooz * y
+            )
 
             luminance = (
                 cosphi * costheta * sinB
@@ -58,34 +77,18 @@ def render_frame(A, B):
                 + cosB * (cosA * sintheta - costheta * sinA * sinphi)
             )
 
-            if luminance > 0:
-                if ooz > zbuffer[xp][yp]:
-                    zbuffer[xp][yp] = ooz
-                    luminance_index = (int)(luminance * 8)
+            if luminance > 0 and ooz > zbuffer[xp][yp]:
+                zbuffer[xp][yp] = ooz
+                char_output[xp][yp], colour_output[xp][yp] = compute_char(luminance)
 
-                    char_output[xp][yp] = ".,-~:;=!*#$@"[luminance_index]
-                    if luminance_index < 3:
-                        color_output[xp][yp] = "126"
-                    elif luminance_index >= 3 and luminance_index < 6:
-                        color_output[xp][yp] = "127"
-                    elif luminance_index >= 6 and luminance_index < 9:
-                        color_output[xp][yp] = "128"
-                    else:
-                        color_output[xp][yp] = "129"
-
-    print("\x1b[H")
-    for i in range(screen_height):
-        for j in range(screen_width):
-            print(f"\033[38;5;{color_output[i][j]}m", end="")
-            print(char_output[i][j], end="")
-        print()
+    return char_output, colour_output
 
 
-print("\x1b[2J")
-A = 1.0
-B = 1.0
+def compute_char(luminance):
+    luminance_index = (int)(luminance * 8)
+    return SYMBOLS[luminance_index], COLOURS[luminance_index // 3]
 
-while True:
-    render_frame(A, B)
-    A += 0.08
-    B += 0.03
+
+if __name__ == "__main__":
+    A, B = 1.0, 1.0
+    simulate_donut(A, B)
