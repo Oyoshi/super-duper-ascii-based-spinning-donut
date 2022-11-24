@@ -124,11 +124,10 @@ def create_args_parser():
     args_parser = ArgumentParser(
         description="Super Duper ASCII Based Spinning Donut",
         allow_abbrev=False,
-        formatter_class=lambda prog: HelpFormatter(prog, max_help_position=120),
+        formatter_class=lambda prog: HelpFormatter(prog, max_help_position=220),
     )
     args_parser.add_argument(
         "-c",
-        "--colour",
         type=str,
         choices=["pink", "magenta", "green", "blue"],
         metavar=f"['pink', 'magenta', 'green', 'blue']",
@@ -140,4 +139,4 @@ def create_args_parser():
 if __name__ == "__main__":
     args_parser = create_args_parser()
     options = args_parser.parse_args()
-    simulate_donut(A0, B0, options.colour)
+    simulate_donut(A0, B0, options.c)
